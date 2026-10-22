@@ -1,0 +1,13 @@
+diff --git a/Makefile b/Makefile
+index a26f3db..341c592 100644
+--- a/Makefile
++++ b/Makefile
+@@ -146,6 +146,8 @@ UPROGS=\
+ 	$U/_usertests\
+ 	$U/_grind\
+ 	$U/_wc\
++	$U/_mystat\
++	$U/_find\
+ 	$U/_zombie\
+ 	$U/_logstress\
+ 	$U/_forphan\
