@@ -1,0 +1,30 @@
+Lab 13 - Semaphores in Your Own Kernel - Observe answers (Part 3, mix)
+
+1. Without the lock the letters mix because one line costs 31 system calls
+   (30 letters + newline, one write() each). The console keeps each single
+   write whole, but between any two writes the other process, running on
+   another CPU, can slip in its own write. Nothing keeps the 31 writes of
+   one line together.
+
+2. The two lines of mix.c that make one line a critical section are
+   sem_down(3) before the inner for loop and sem_up(3) after it.
+   Semaphore 3 starts at 1: the first process takes the unit, the other
+   sleeps in the kernel until the first has written its 31 bytes and ups.
+
+3. "while (s->value == 0)" and not "if": a process can wake up and still
+   find 0. wakeup() makes RUNNABLE every process sleeping on the address;
+   if two were waiting and sem_up added one unit, both wake, the first to
+   run takes the unit (value back to 0) and the second finds 0 again.
+   With "if" it would decrement to -1 and pass; with "while" it sleeps
+   again. The same loop re-tests after a wakeup caused by kill.
+
+4. release(&s->lock) BEFORE sleep(): a process must never sleep holding a
+   spinlock. acquire disables interrupts and other CPUs spin on the lock.
+   A sleeping owner cannot run until sem_up wakes it, but sem_up on another
+   CPU would spin forever on the lock the sleeper holds -> the kernel hangs
+   (or panics in sched(), which checks that no other lock is held). The
+   two-step sleep_prepare/sleep exists so the lock can be released between
+   registering the channel and sleeping without losing the wakeup.
+
+Optional: sem_trydown (27) implemented in kernel/sem.c; user/trytest.c
+shows 0 (unit taken), -1 (nothing left, no sleep), 0 again after sem_up.
